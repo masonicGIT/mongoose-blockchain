@@ -1,0 +1,35 @@
+{
+  "name": "mongoose-blockchain",
+  "version": "0.0.1",
+  "description": "A mongoose plugin to make it easy to develop on the blockchain",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "mocha test/",
+    "lint": "jshint **.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://www.github.com/masonicGIT/mongoose-blockchain"
+  },
+  "keywords": [
+    "bitcoin",
+    "blockchain",
+    "mongoose",
+    "mongodb",
+    "javascript"
+  ],
+  "author": "Mason Borda",
+  "license": "MIT",
+  "devDependencies": {
+    "jshint": "latest",
+    "mocha": "latest"
+  },
+  "dependencies": {
+    "bitgo": "^0.12.0",
+    "bluebird": "^3.3.4",
+    "mongoose": "^4.4.7"
+  }
+}
