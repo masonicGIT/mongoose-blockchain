@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
-var blockchain = require('../index');
+var blockchain = require('./../../index');
+
 var Schema = mongoose.Schema;
 
 // Create user schema
@@ -17,8 +18,7 @@ var userSchema = new Schema({
   updated_at: { type: Date, default: Date.now }
 });
 
-// Setup Bitcoin plugin
-userSchema.plugin(blockchain);
+userSchema.plugin(require('./../../index'));
 
 // Create model using schema
 var User = mongoose.model('User', userSchema);
