@@ -1,22 +1,23 @@
 var User = require('../user');
+
 var seedUser = function() {
-  return User.find({}).exec()
-  .then(function(documents) {
-    if (documents.length === 0) {
-      console.log('Initializing database with sample user');
+  var user = new User ({
+    name: 'test_name',
+    username: 'test_username',
+    password: 'password',
+    admin: false,
+    location: 'Palo Alto, CA',
+    meta: {
+      age: 18,
+      website: 'https://platform.bitgo.com'
     }
-    var user = new User ({
-      name: 'test_name',
-      username: 'test_username',
-      password: 'password',
-      admin: false,
-      location: 'Palo Alto, CA',
-      meta: {
-        age: 18,
-        website: 'https://platform.bitgo.com'
-      }
-    });
-    return user.save();
+  });
+  return user.save()
+  .then(function(res) {
+    return res;
+  })
+  .catch(function(err) {
+    return err;
   });
 };
 
