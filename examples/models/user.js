@@ -18,7 +18,7 @@ var userSchema = new Schema({
   updated_at: { type: Date, default: Date.now }
 });
 
-userSchema.plugin(require('./../../index'));
+userSchema.plugin(blockchain);
 
 // Create model using schema
 var User = mongoose.model('User', userSchema);
