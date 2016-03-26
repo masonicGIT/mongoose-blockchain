@@ -7,7 +7,7 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "mocha test/",
+    "test": "mocha test/ --timeout 100000",
     "lint": "jshint **.js"
   },
   "repository": {
@@ -30,6 +30,7 @@
   "dependencies": {
     "bitgo": "^0.12.0",
     "bluebird": "^3.3.4",
+    "lodash": "^4.6.1",
     "mongoose": "^4.4.7",
     "should": "^8.2.2"
   }

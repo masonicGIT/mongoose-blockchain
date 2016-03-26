@@ -18,7 +18,7 @@ var userSchema = new Schema({
   updated_at: { type: Date, default: Date.now }
 });
 
-userSchema.plugin(blockchain);
+userSchema.plugin(blockchain, process.env.BITGO_ACCESS_TOKEN);
 
 // Create model using schema
 var User = mongoose.model('User', userSchema);

@@ -7,4 +7,11 @@ config.mongoURI = {
   stage: process.env.MONGOLAB_URI
 };
 
+// Set BitGo Test wallet here (OPTIONAL)
+config.wallet = {
+  label: 'mongoose_blockchain_test',
+  password: 'test',
+  amount: 10000
+};
+
 module.exports = config;
