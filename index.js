@@ -7,12 +7,15 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
 
   var bitcoin = function () {
 
+    /**
+     *  Sends Bitcoin to a bitcoin address
+     *
+     *  @method sendBitcoin
+     *  @param
     var sendBitcoin = function(senderWallet, recipientAddress, amount, password) {
-	console.dir(senderWallet);
       return new Promise(function (resolve, reject) {
         senderWallet.sendCoins({ address: recipientAddress, amount: amount, walletPassphrase: password, minConfirms: 0 }, function(err, result) {
           if (err) { reject(err) };
-          console.log(result)
           resolve({ transactionId: result.hash });
         });
       });

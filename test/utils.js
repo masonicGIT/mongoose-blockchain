@@ -9,7 +9,6 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: process.env.BITGO_ACCE
 function createWallet(label, password) {
   return new Promise(function(resolve, reject) {
     bitgo.wallets().createWalletWithKeychains({ "label": label, "passphrase": password }, function(err, result) {
-      console.log(err + result);
       if (err) { reject(err) };
       reject('Send testnet Bitcoin to the following wallet to continue: ' + result.wallet.wallet.id);
     });
@@ -21,7 +20,7 @@ function getTestWallet(walletId) {
   return new Promise(function(resolve, reject) {
     bitgo.wallets().get({"type": "bitcoin", "id": walletId}, function callback(err, wallet) {
       if (err) { reject(err) };
-      if (wallet.balance() === 0) {
+      if (wallet.balance() <= 100000000) {
         reject('Send testnet Bitcoin to the following wallet to continue: ' + wallet.id());
       }
       resolve(wallet);
@@ -33,7 +32,6 @@ function sendCoinsGetHash(wallet, destinationAddress, amount) {
   return new Promise(function(resolve, reject) {
     wallet.sendCoins({ address: destinationAddress, amount: amount || config.wallet.amount, walletPassphrase: config.wallet.password }, function(err, result) {
       if (err) { reject(err) };
-      console.log(result);
       return resolve(result.hash);
     });
   })
