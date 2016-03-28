@@ -6,6 +6,14 @@ var config = require('../config/config');
 
 var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: process.env.BITGO_ACCESS_TOKEN });
 
+exports.waitTwoMinutes = function() {
+  return new Promise(function(resolve, reject) {
+    setTimeout(function() {
+      resolve(true)
+    }, 120000);
+  });
+};
+
 function createWallet(label, password) {
   return new Promise(function(resolve, reject) {
     bitgo.wallets().createWalletWithKeychains({ "label": label, "passphrase": password }, function(err, result) {

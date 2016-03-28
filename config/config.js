@@ -11,7 +11,7 @@ config.mongoURI = {
 config.wallet = {
   label: 'mongoose_blockchain_test',
   password: 'test',
-  amount: 10000
+  amount: 50000
 };
 
 module.exports = config;
