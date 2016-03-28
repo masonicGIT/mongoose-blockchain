@@ -83,15 +83,6 @@ describe('Blockchain testing suite - BitGo', function() {
     });
   });
 
-  it('Wait two minutes for transaction to settle', function() {
-    this.timeout(125000);
-    console.log('Pausing ten seconds for the transaction to settle');
-    return utils.waitTwoMinutes()
-    .then(function(res) {
-      return;
-    });
-  });
-
   if (!!config.wallet.label || !!config.wallet.password) {
 
     // Let the previous transaction settle
