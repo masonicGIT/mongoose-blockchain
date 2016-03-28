@@ -16,10 +16,10 @@ before(function() {
   // First ensure that the BitGo Access token is set prior to continuing
   if (!process.env.BITGO_ACCESS_TOKEN) {
     console.log('\n\n** BitGo Access Token not set');
-    console.log('** Retreive your access token from https://www.bitgo.com and set it as an environment variable');
+    console.log('** Retrieve your access token from https://www.bitgo.com and set it as an environment variable');
     console.log("** export BITGO_ACCESS_TOKEN='J3Das83k..3laelkwasd'");
-    console.log('** Join us on Slack if you continue to experience issues https://slack.bitgo.com');
-    return;
+    console.log('** Join us on Slack if you continue to experience issues https://slack.bitgo.com\n');
+    process.exit(-1);
   };
 
   mongoose.connect(config.mongoURI['test']);
