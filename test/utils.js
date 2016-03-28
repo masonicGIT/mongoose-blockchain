@@ -20,7 +20,7 @@ function getTestWallet(walletId) {
   return new Promise(function(resolve, reject) {
     bitgo.wallets().get({"type": "bitcoin", "id": walletId}, function callback(err, wallet) {
       if (err) { reject(err) };
-      if (wallet.balance() <= 100000000) {
+      if (wallet.balance() <= 100000) {
         reject('Send testnet Bitcoin to the following wallet to continue: ' + wallet.id());
       }
       resolve(wallet);

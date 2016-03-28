@@ -95,6 +95,24 @@ describe('Blockchain testing suite - BitGo', function() {
         throw new Error(err);
       });
     });
+
+    // Let the previous transaction settle
+    it('User is able to make an out-of-network transfer', function() {
+      var withdrawalAddress;
+      return User.deposit('test_username')
+      .then(function (address) {
+        address.should.be.ok();
+        withdrawalAddress = address;
+      })
+      return User.withdrawal('test_username', withdrawalAddress, 10000, 'password')
+      .then(function(res) {
+        return;
+      })
+      .catch(function(err) {
+        throw new Error(err);
+      });
+    });
+
   } else {
     throw new Error('Please set your test wallet parameters in the config/config.js file');
   }
