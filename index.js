@@ -11,7 +11,11 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
      *  Sends Bitcoin to a bitcoin address
      *
      *  @method sendBitcoin
-     *  @param
+     *  @param { Object } the BitGo wallet object of the user
+     *  @param { String } the bitcoin address of the recipient
+     *  @param { Number } the amount to send in satoshis
+     *  @param { String } the passphrase that is encrypting the user private key
+     *  @returns { Object } the transaction hash of the sent transaction
      */
     var sendBitcoin = function(senderWallet, recipientAddress, amount, password) {
       return new Promise(function (resolve, reject) {
@@ -22,6 +26,13 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
       });
     };
 
+    /**
+     *  Generate a reusable Bitcoin HD address from a users wallet
+     *
+     *  @method generateAddress
+     *  @param { Object } the BitGo wallet object of a user
+     *  @returns { Object } the generated address from the wallet
+     */
     var generateAddress = function(wallet) {
       return new Promise(function (resolve, reject) {
         wallet.createAddress({ "chain": 0 }, function(err, address) {
@@ -31,6 +42,13 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
       })
     };
 
+    /**
+     *  Get the Bitcoin wallet object of a user
+     *
+     *  @method getWallet
+     *  @param { String } the wallet id of a user wallet
+     *  @returns { Object } the wallet associated with the wallet id
+     */
     var getWallet = function(walletId) {
       return new Promise(function (resolve, reject) {
         bitgo.wallets().get({ "id": walletId }, function(err, wallet) {
@@ -40,7 +58,14 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
       });
     };
 
-
+    /**
+     *  Create a new BitGo wallet for a user
+     *
+     *  @method createUserWallet
+     *  @param { String } the password to be used to encrypt the user keys
+     *  @param { String } the label to set for the wallet, this will be the users email or username
+     *  @returns { Object } the users wallet object
+     */
     var createUserWallet = function(password, label) {
       return new Promise(function (resolve, reject) {
         bitgo.wallets().createWalletWithKeychains({"passphrase": password, "label": label}, function(err, res) {
@@ -57,6 +82,17 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
     };
   }();
 
+  /**
+   * Statics
+   */
+
+  /**
+   * Provides a generated address for a user that can be used to deposit currency to a user wallet
+   *
+   * @method deposit
+   * @param { String } a username or email of the user
+   * @returns { Object } a newly generated deposit address for the user
+   */
   schema.statics.deposit = Promise.coroutine(function* (username) {
     "use strict";
     var self = this;
@@ -72,6 +108,16 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
     return address;
   });
 
+  /**
+   * Transfers currency from one user to another
+   *
+   * @method transfer
+   * @param { String } a username or email of the sender
+   * @param { String } a username or email of the recipient
+   * @param { String } the amount to be transferred
+   * @param { String } the password of the senders wallet
+   * @returns { Object } a transaction id for the transaction
+   */
   schema.statics.transfer = Promise.coroutine(function* (sender, recipient, amount, password) {
     "use strict";
     var self = this;
@@ -90,6 +136,16 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
     return receipt;
   });
 
+  /**
+   * Withdraws an amount to an out of network address
+   *
+   * @method withdrawal
+   * @param { String } a username or email of the sender
+   * @param { String } an address of for the recipient
+   * @param { String } the amount to be transferred
+   * @param { String } the password of the senders wallet
+   * @returns { Object } a transaction id for the transaction
+   */
   schema.statics.withdrawal = Promise.coroutine(function* (sender, recipient, amount, password) {
     "use strict";
     var self = this;
