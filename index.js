@@ -1,9 +1,14 @@
-var BitGoJS = require('bitgo');
+var assert = require('assert');
 var Promise = require('bluebird');
+var BitGoJS = require('bitgo');
+
+var withdrawalError = require('./config/config.js').error.withdrawal;
+var depositError = require('./config/config.js').error.deposit;
+var transferError = require('./config/config.js').error.transfer;
 
 var blockchain = function(schema, bitgoAccessToken) {
 
-var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
+  var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
 
   var bitcoin = function () {
 
@@ -149,7 +154,7 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
   schema.statics.withdrawal = Promise.coroutine(function* (sender, recipient, amount, password) {
     "use strict";
     var self = this;
-
+    console.dir(sender, recipient, amount, password);
     // Get users by username
     let sendingUser = yield self.findOne({ username: sender }).exec();
     let receivingUser = yield self.findOne({ username: recipient }).exec();
@@ -164,6 +169,79 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
     return receipt;
   });
 
+  schema.statics.requestWithdrawal = function(params) {
+    // Ensure all parameters have been properly initialized
+    assert.equal(typeof params.sender, 'object', new Error(withdrawalError.object));
+    assert.equal(typeof params.sender.username, 'string', new Error(withdrawalError.sender.username));
+    assert.equal(typeof params.sender.password, 'string', new Error(withdrawalError.sender.password));
+    assert.equal(typeof params.sender.currency, 'string', new Error(withdrawalError.sender.currency));
+  
+    assert.equal(typeof params.recipient, 'object', new Error(withdrawalError.object));
+    assert.equal(typeof params.recipient.address, 'string', new Error(withdrawalError.recipient.address));
+    assert.equal(typeof params.recipient.amount, 'number', new Error(withdrawalError.recipient.amount));
+    assert.equal(typeof params.recipient.currency, 'string', new Error(withdrawalError.recipient.currency));
+  
+    this.withdrawalObject = {
+      sender: {
+        username: params.sender.username,
+        password: params.sender.password,
+        currency: params.sender.currency        
+      },
+      recipient: {
+        address: params.recipient.address,
+        amount: params.recipient.amount,
+        currency: params.recipient.currency
+      }
+    }
+    return this.withdrawalObject;
+  
+  };
+
+  schema.statics.requestDeposit = function(params) {
+    // Ensure all parameters have been properly initialized
+    assert.equal(typeof params.recipient, 'object', new Error(depositError.object));
+    assert.equal(typeof params.recipient.username, 'string', new Error(depositError.recipient.username));
+    assert.equal(typeof params.recipient.currency, 'string', new Error(depositError.recipient.currency));
+
+    this.depositObject = {
+      recipient: {
+        username: params.recipient.username,
+        currency: params.recipient.currency
+      }
+    }
+    return this.depositObject;
+  };
+  
+  schema.statics.requestTransfer = function(params) {
+    // Ensure all parameters have been properly initialized
+    assert.equal(typeof params.sender, 'object', new Error(transferError.object));
+    assert.equal(typeof params.sender.username, 'string', new Error(transferError.sender.username));
+    assert.equal(typeof params.sender.password, 'string', new Error(transferError.sender.password));
+    assert.equal(typeof params.sender.currency, 'string', new Error(transferError.sender.currency));
+   
+    assert.equal(typeof params.recipient, 'object', new Error(transferError.object));
+    assert.equal(typeof params.recipient.username, 'string', new Error(transferError.recipient.username));
+    assert.equal(typeof params.recipient.amount, 'number', new Error(transferError.recipient.amount));
+    assert.equal(typeof params.recipient.currency, 'string', new Error(transferError.recipient.currency));
+    
+    this.transferObject = {
+      sender: {
+        username: params.sender.username,
+        password: params.sender.password,
+        currency: params.sender.currency        
+      },
+      recipient: {
+        username: params.recipient.username,
+        amount: params.recipient.amount,
+        currency: params.recipient.currency
+      },
+      withdraw: withdraw(),
+      confirm: function() {
+	  return this.withdrawal(this.sender.username, this.recipient.username, this.recipient.amount, this.sender.password);
+      }
+    }
+    return this.transferObject;
+  };    
 
   // Augment the schema to include a bitcoin object
   schema.add({ bitcoin: { walletId: { type: String, default: null }, instant: { type: Boolean, default: null } } });
