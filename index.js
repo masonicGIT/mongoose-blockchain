@@ -243,7 +243,7 @@ var blockchain = function(schema, bitgoAccessToken) {
     };
     throw new Error ('There was an error setting your transaction request');
   };
-  
+
   // Augment the schema to include a bitcoin object
   schema.add({ bitcoin: { walletId: { type: String, default: null }, instant: { type: Boolean, default: null } } });
 
