@@ -1,7 +1,8 @@
 var config = require('../config/config');
 var should = require('should');
-var mongoose = require('mongoose');
+var assert = require('assert');
 var utils = require('./utils');
+var mongoose = require('mongoose');
 var BitGoJS = require('bitgo');
 
 var User = require('../examples/models/user');
@@ -9,7 +10,7 @@ var seedUserModel = require('../examples/models/seeds/user.js');
 var seedAdminModel = require('../examples/models/seeds/admin.js');
 
 before(function() {
-
+  
   var testWalletLabel = config.wallet['label'];
   var testWalletPassword = config.wallet['password'];
 
@@ -23,7 +24,6 @@ before(function() {
   };
 
   mongoose.connect(config.mongoURI['test']);
-
   // Seed the user model
   return utils.setupTestWallet(testWalletLabel, testWalletPassword)
   .then(function(res) {
@@ -50,9 +50,374 @@ before(function() {
    })
    .catch(function(err) {
      throw new Error(err);
-   });
+   }); 
 
 });
+
+describe('Generic transaction request constructors', function() {
+
+  it('Withdrawal Request - Successfully call and set constructor', function(done) {
+    var transaction = new User.transactionRequest({
+      type: 'withdrawal', 
+      amount: 10,
+      sender: {
+        username: 'test_username',
+        password: 'test_password',
+        currency: 'btc'
+      },
+      recipient: {
+        address: '123address321',
+        currency: 'btc'
+      }
+    });
+    transaction.type.should.equal('withdrawal');
+    transaction.amount.should.equal(10);
+    transaction.sender.username.should.equal('test_username');
+    transaction.sender.password.should.equal('test_password');
+    transaction.sender.currency.should.equal('btc');
+    transaction.recipient.address.should.equal('123address321');
+    transaction.recipient.currency.should.equal('btc');
+    done();
+  });
+
+  it('Withrawal Request - Fail on invalid sender username', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'withdrawal',
+  	amount: 10,
+        sender: {
+          username: null,
+          password: 'test_password',
+          currency: 'btc'
+        },
+        recipient: {
+          address: '123address321',
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.withdrawal.sender.username);
+      done();
+    }
+  });
+
+  it('Request withdrawal - Fail on invalid sender password', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'withdrawal',
+  	amount: 10,
+        sender: {
+          username: 'test_username',
+          password: null,
+          currency: 'btc'
+        },
+        recipient: {
+          address: '123address321',
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.withdrawal.sender.password);
+      done();
+    }
+  });
+
+  it('Withdrawal request - Fail on invalid sender currency', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'withdrawal',
+  	amount: 10,
+        sender: {
+          username: 'test_username',
+          password: 'test_password',
+          currency: null
+        },
+        recipient: {
+          address: '123address321',
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.withdrawal.sender.currency);
+      done();
+    }
+  });
+
+  it('Withdrawal request - Fail on invalid recipient address', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'withdrawal',
+  	amount: 10,
+        sender: {
+          username: 'test_username',
+          password: 'test_password',
+          currency: 'btc'
+        },
+        recipient: {
+          address: null,
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.withdrawal.recipient.address);
+      done();
+    }
+  });
+
+  it('Withdrawal request - Fail on invalid recipient amount', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'withdrawal',
+  	amount: null,
+        sender: {
+          username: 'test_username',
+          password: 'test_password',
+          currency: 'btc'
+        },
+        recipient: {
+          address: '123address321',
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.withdrawal.amount);
+      done();
+    }
+  });
+
+  it('Withdrawal request - Fail on invalid recipient currency', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'withdrawal',
+  	amount: 10,
+        sender: {
+          username: 'test_username',
+          password: 'test_password',
+          currency: 'btc'
+        },
+        recipient: {
+          address: '123address321',
+          currency: null
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.withdrawal.recipient.currency);
+      done();
+    }
+  });
+
+  it('Request deposit - Successfully call and set constructor', function(done) {
+    var transaction = new User.transactionRequest({
+      type: 'deposit',
+      recipient: {
+        username: 'test_username',
+        currency: 'btc'
+      }
+    });
+
+    transaction.recipient.username.should.equal('test_username');
+    transaction.recipient.currency.should.equal('btc');
+    done();
+  });
+
+  it('Deposit request - Fail on invalid deposit username', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'deposit',
+        recipient: {
+          username: null,
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.deposit.recipient.username);
+      done();
+    }
+  });
+
+  it('Deposit request - Fail on invalid deposit currency', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'deposit',
+        recipient: {
+          username: 'test_username',
+          currency: null
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.deposit.recipient.currency);
+      done();
+    }
+  });
+
+  it('Request transfer - Successfully call and set constructor', function(done) {
+    var transaction = new User.transactionRequest({
+      type: 'transfer',
+      amount: 10,
+      sender: {
+        username: 'test_username',
+        password: 'test_password',
+        currency: 'btc'
+      },
+      recipient: {
+        username: 'test_username',
+        currency: 'btc'
+      }
+    });
+
+    transaction.sender.username.should.equal('test_username');
+    transaction.sender.password.should.equal('test_password');
+    transaction.sender.currency.should.equal('btc');
+    transaction.recipient.username.should.equal('test_username');
+    transaction.amount.should.equal(10);
+    transaction.type.should.equal('transfer');
+    transaction.recipient.currency.should.equal('btc');
+    done();
+  });
+
+  it('Request transfer - Fail on invalid sender username', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'transfer',
+        amount: 10,
+        sender: {
+          username: null,
+          password: 'test_password',
+          currency: 'btc'
+        },
+        recipient: {
+          username: 'test_username',
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.transfer.sender.username);
+      done();
+    }
+  });
+
+
+  it('Request transfer - Fail on invalid sender password', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'transfer',
+  	amount: 10,
+        sender: {
+          username: 'test_username',
+          password: null,
+          currency: 'btc'
+        },
+        recipient: {
+          username: 'test_username',
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.transfer.sender.password);
+      done();
+    }
+  });
+
+  it('Transfer request - Fail on invalid sender currency', function(done) {
+    try {
+      var transfer = new User.transactionRequest({
+        type: 'transfer',
+  	amount: 10,
+        sender: {
+          username: 'test_username',
+          password: 'test_password',
+          currency: null
+        },
+        recipient: {
+          username: 'test_username',
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.transfer.sender.currency);
+      done();
+    }
+  });
+
+  it('Transfer request - Fail on invalid recipient username', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'transfer',
+  	amount: 10,
+        sender: {
+          username: 'test_username',
+          password: 'test_password',
+          currency: 'btc'
+        },
+        recipient: {
+          username: null,
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.transfer.recipient.username);
+      done();
+    }
+  });
+
+  it('Transfer request - Fail on invalid recipient amount', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'transfer',
+  	amount: null,
+        sender: {
+          username: 'test_username',
+          password: 'test_password',
+          currency: 'btc'
+        },
+        recipient: {
+          username: 'test_username',
+          currency: 'btc'
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.transfer.amount);
+      done();
+    }
+  });
+
+  it('Transfer request - Fail on invalid recipient currency', function(done) {
+    try {
+      var transaction = new User.transactionRequest({
+        type: 'transfer',
+  	amount: 10,
+        sender: {
+          username: 'test_username',
+          password: 'test_password',
+          currency: 'btc'
+        },
+        recipient: {
+          username: 'test_username',
+          currency: null
+        }
+      });
+    } catch (e) {
+      var errorMessage = String(e['message']);
+      errorMessage.should.containEql(config.error.transfer.recipient.currency);
+      done();
+    }
+  });
+
+});
+
 
 describe('Blockchain testing suite - BitGo', function() {
 
@@ -64,7 +429,15 @@ describe('Blockchain testing suite - BitGo', function() {
   });
 
   it('User is able to generate a new reusable address', function() {
-    return User.deposit('test_username')
+    var transaction = new User.transactionRequest({
+      type: 'deposit',
+      recipient: {
+        username: 'test_username',
+        currency: 'btc'
+      }
+    });
+    console.dir(User.deposit);
+    return User.deposit(transaction)
     .then(function (address) {
       address.should.be.ok();
     })
@@ -74,7 +447,15 @@ describe('Blockchain testing suite - BitGo', function() {
   });
 
   it('Fund users wallet', function() {
-    return User.deposit('test_username')
+    var transaction = new User.transactionRequest({
+      type: 'deposit',
+      recipient: {
+        username: 'test_username',
+        currency: 'btc'
+      }
+    });
+
+    return User.deposit(transaction)
     .then(function (address) {
       return utils.sendToAddress(address.address);
     })
@@ -87,8 +468,23 @@ describe('Blockchain testing suite - BitGo', function() {
 
     // Let the previous transaction settle
     it('User is able to make a in-network transfer', function() {
-      return User.transfer('test_username', 'test_username_admin', 10000, 'password')
+      var newTransaction = new User.transactionRequest({
+        type: 'transfer',
+        amount: 10000,
+        sender: {
+          username: 'test_username',
+          password: 'password',
+          currency: 'btc'
+        },
+        recipient: {
+          username: 'test_username_admin',
+          currency: 'btc'
+        }
+      });
+  
+      return User.transfer(newTransaction)
       .then(function(res) {
+        console.log(res);
         return;
       })
       .catch(function(err) {
@@ -99,7 +495,15 @@ describe('Blockchain testing suite - BitGo', function() {
     // Let the previous transaction settle
     it('User is able to make an out-of-network transfer', function() {
       var withdrawalAddress;
-      return User.deposit('test_username')
+      var depositRequest = new User.transactionRequest({
+        type: 'deposit',
+        recipient: {
+	  username: 'test_username',
+          currency: 'btc'
+	}
+      });
+
+      return User.deposit(depositRequest)
       .then(function (address) {
         address.should.be.ok();
         withdrawalAddress = address;
