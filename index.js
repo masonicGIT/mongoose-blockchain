@@ -1,9 +1,14 @@
-var BitGoJS = require('bitgo');
+var assert = require('assert');
 var Promise = require('bluebird');
+var BitGoJS = require('bitgo');
+
+var withdrawalError = require('./config/config.js').error.withdrawal;
+var depositError = require('./config/config.js').error.deposit;
+var transferError = require('./config/config.js').error.transfer;
 
 var blockchain = function(schema, bitgoAccessToken) {
 
-var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
+  var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
 
   var bitcoin = function () {
 
@@ -21,7 +26,7 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
       return new Promise(function (resolve, reject) {
         senderWallet.sendCoins({ address: recipientAddress, amount: amount, walletPassphrase: password, minConfirms: 0 }, function(err, result) {
           if (err) { reject(err) };
-          resolve({ transactionId: result.hash });
+          resolve({ transactionId: result });
         });
       });
     };
@@ -93,12 +98,12 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
    * @param { String } a username or email of the user
    * @returns { Object } a newly generated deposit address for the user
    */
-  schema.statics.deposit = Promise.coroutine(function* (username) {
+  schema.statics.deposit = Promise.coroutine(function* (params) {
     "use strict";
     var self = this;
 
     // Get user by username
-    let user = yield self.findOne({ username: username }).exec();
+    let user = yield self.findOne({ username: params.recipient.username }).exec();
 
     // Get the wallet of the user
     let wallet = yield bitcoin.getWallet(user.bitcoin.walletId);
@@ -118,13 +123,13 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
    * @param { String } the password of the senders wallet
    * @returns { Object } a transaction id for the transaction
    */
-  schema.statics.transfer = Promise.coroutine(function* (sender, recipient, amount, password) {
+  schema.statics.transfer = Promise.coroutine(function* (params) {
     "use strict";
     var self = this;
 
     // Get users by username
-    let sendingUser = yield self.findOne({ username: sender }).exec();
-    let receivingUser = yield self.findOne({ username: recipient }).exec();
+    let sendingUser = yield self.findOne({ username: params.sender.username }).exec();
+    let receivingUser = yield self.findOne({ username: params.recipient.username }).exec();
 
     // Generate a new address for the recipient
     let recipientWallet = yield bitcoin.getWallet(receivingUser.bitcoin.walletId);
@@ -132,7 +137,7 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
 
     // Send Bitcoin to the recipient address
     let senderWallet = yield bitcoin.getWallet(sendingUser.bitcoin.walletId);
-    let receipt = yield bitcoin.sendBitcoin(senderWallet, recipientAddress.address, amount, password);
+    let receipt = yield bitcoin.sendBitcoin(senderWallet, recipientAddress.address, params.amount, params.sender.password);
     return receipt;
   });
 
@@ -149,7 +154,7 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
   schema.statics.withdrawal = Promise.coroutine(function* (sender, recipient, amount, password) {
     "use strict";
     var self = this;
-
+    console.dir(sender, recipient, amount, password);
     // Get users by username
     let sendingUser = yield self.findOne({ username: sender }).exec();
     let receivingUser = yield self.findOne({ username: recipient }).exec();
@@ -164,6 +169,80 @@ var bitgo = new BitGoJS.BitGo({ env: 'test', accessToken: bitgoAccessToken });
     return receipt;
   });
 
+  schema.statics.transactionRequest = function(params) {
+    // Ensure all parameters have been properly initialized
+    if (!params.type) {
+      throw new Error('Please provide a valid transaction type: deposit, withdrawal, or transfer');
+    };
+    if (params.type === 'transfer') {
+     
+      assert.equal(typeof params.amount, 'number', new Error(transferError.amount));
+      assert.equal(typeof params.sender, 'object', new Error(transferError.object));
+      assert.equal(typeof params.sender.username, 'string', new Error(transferError.sender.username));
+      assert.equal(typeof params.sender.password, 'string', new Error(transferError.sender.password));
+      assert.equal(typeof params.sender.currency, 'string', new Error(transferError.sender.currency));
+    
+      assert.equal(typeof params.recipient, 'object', new Error(transferError.object));
+      assert.equal(typeof params.recipient.username, 'string', new Error(transferError.recipient.username));
+      assert.equal(typeof params.recipient.currency, 'string', new Error(transferError.recipient.currency));
+
+      this.transferObject = {
+        type: params.type,
+        amount: params.amount,
+        sender: {
+          username: params.sender.username,
+          password: params.sender.password,
+          currency: params.sender.currency        
+        },
+        recipient: {
+          username: params.recipient.username,
+          currency: params.recipient.currency
+        }
+      };
+      return this.transferObject;
+    };
+
+    if (params.type === 'withdrawal') {
+      assert.equal(typeof params.amount, 'number', new Error(withdrawalError.amount));
+      assert.equal(typeof params.sender.username, 'string', new Error(withdrawalError.sender.username));
+      assert.equal(typeof params.sender.password, 'string', new Error(withdrawalError.sender.password));
+      assert.equal(typeof params.sender.currency, 'string', new Error(withdrawalError.sender.currency));
+    
+      assert.equal(typeof params.recipient, 'object', new Error(withdrawalError.object));
+      assert.equal(typeof params.recipient.address, 'string', new Error(withdrawalError.recipient.address));
+      assert.equal(typeof params.recipient.currency, 'string', new Error(withdrawalError.recipient.currency));
+
+      this.withdrawalObject = {
+        type: params.type,
+        amount: params.amount,
+        sender: {
+          username: params.sender.username,
+          password: params.sender.password,
+          currency: params.sender.currency        
+        },
+        recipient: {
+          address: params.recipient.address,
+          currency: params.recipient.currency
+        }
+      };
+      return this.withdrawalObject;
+    };
+
+    if (params.type === 'deposit') {
+      assert.equal(typeof params.recipient, 'object', new Error(depositError.object));
+      assert.equal(typeof params.recipient.username, 'string', new Error(depositError.recipient.username));
+      assert.equal(typeof params.recipient.currency, 'string', new Error(depositError.recipient.currency));	
+
+      this.depositObject = {
+        recipient: {
+          username: params.recipient.username,
+          currency: params.recipient.currency
+        }
+      };
+      return this.depositObject;
+    };
+    throw new Error ('There was an error setting your transaction request');
+  };
 
   // Augment the schema to include a bitcoin object
   schema.add({ bitcoin: { walletId: { type: String, default: null }, instant: { type: Boolean, default: null } } });
