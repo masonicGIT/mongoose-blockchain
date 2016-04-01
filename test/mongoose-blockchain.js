@@ -436,7 +436,7 @@ describe('Blockchain testing suite - BitGo', function() {
         currency: 'btc'
       }
     });
-    console.dir(User.deposit);
+
     return User.deposit(transaction)
     .then(function (address) {
       address.should.be.ok();
@@ -484,7 +484,6 @@ describe('Blockchain testing suite - BitGo', function() {
   
       return User.transfer(newTransaction)
       .then(function(res) {
-        console.log(res);
         return;
       })
       .catch(function(err) {
