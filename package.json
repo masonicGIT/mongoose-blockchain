@@ -32,6 +32,8 @@
     "bluebird": "^3.3.4",
     "lodash": "^4.6.1",
     "mongoose": "^4.4.7",
-    "should": "^8.2.2"
+    "shapeshiftjs": "0.0.1",
+    "should": "^8.2.2",
+    "yargs": "^4.4.0"
   }
 }
