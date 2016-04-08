@@ -495,10 +495,16 @@ describe('Blockchain testing suite - BitGo', function() {
     it('User is able to make an out-of-network transfer', function() {
       var withdrawalAddress;
       var depositRequest = new User.transactionRequest({
-        type: 'deposit',
+        type: 'withdrawal',
+        amount: 1000,
+        sender: {
+	  username: 'test_username_admin',
+          password: 'test_password',
+          currency: 'bitcoin'
+	},
         recipient: {
-	  username: 'test_username',
-          currency: 'btc'
+	  address: '2NGaWJSgQbHfLPKhQ5xk2tBhGkYBj6NPU3T',
+          currency: 'bitcoin'
 	}
       });
 
@@ -507,7 +513,7 @@ describe('Blockchain testing suite - BitGo', function() {
         address.should.be.ok();
         withdrawalAddress = address;
       })
-      return User.withdrawal('test_username', withdrawalAddress, 10000, 'password')
+      return User.withdrawal()
       .then(function(res) {
         return;
       })
