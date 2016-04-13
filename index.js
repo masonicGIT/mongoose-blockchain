@@ -265,7 +265,6 @@ var blockchain = function(schema, bitgoAccessToken) {
    * @param { Object } recipient - Information about the receiving party
    * @param { String } recipient.username - the username of the recieving party
    * @param { String } recipient.currency - the desired recieving currency, currenctly 'bitcoin' and 'ether' are supported
-   * @returns { Object } transferObject - a transaction object that contains all the information necessary for a transfer to execute
    *
    * if params.type === 'withdrawal'
    * @param { Object } sender - Information about the sending party
@@ -283,6 +282,17 @@ var blockchain = function(schema, bitgoAccessToken) {
    * @param { String } recipient.currency - the desired recieving currency, currenctly 'bitcoin' and 'ether' are supported
    * @returns { Object } depositObject - a transaction object that contains all the information necessary for a deposit to execute
    */
+
+      this.depositObject = {
+        recipient: {
+          username: params.recipient.username,
+          currency: params.recipient.currency,
+          amount: params.recipient.amount
+        }
+      };
+
+
+
   schema.statics.transactionRequest = function(params) {
     // Ensure all parameters have been properly initialized
     if (!params.type) {
@@ -351,7 +361,8 @@ var blockchain = function(schema, bitgoAccessToken) {
 	amount: params.recipient.amount,
         recipient: {
           username: params.recipient.username,
-          currency: params.recipient.currency
+          currency: params.recipient.currency,
+          amount: params.recipient.amount
         }
       };
       return this.depositObject;
